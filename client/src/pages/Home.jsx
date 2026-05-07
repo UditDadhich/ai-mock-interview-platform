@@ -1,10 +1,11 @@
 import React from 'react'
+import Navbar from '../components/Navbar.jsx';
 
 
 function Home() {
     return (
-        <div>
-            Home Page 
+        <div className='min-h-screen bg-[#f3f3f3] flex flex-col'>
+            <Navbar/>
         </div>
     )
 }
