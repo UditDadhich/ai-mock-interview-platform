@@ -15,7 +15,7 @@ import { auth, provider } from "../utils/firebase.js";
 import { ServerUrl } from "../App.jsx";
 import { setUserData } from "../redux/userSlice.js";
 
-function Auth() {
+function Auth({isModel = false}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isAuthenticating, setIsAuthenticating] = useState(false);

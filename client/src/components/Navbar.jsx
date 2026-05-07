@@ -10,6 +10,7 @@ import axios from "axios";
 // Local Imports
 import { ServerUrl } from "../App.jsx";
 import { setUserData } from "../redux/userSlice.js";
+import AuthModel from "./AuthModel.jsx";
 
 function Navbar() {
   const { userData, loading } = useSelector((state) => state.user);
@@ -18,6 +19,8 @@ function Navbar() {
   
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [showAuth , setShowAuth] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -59,6 +62,10 @@ function Navbar() {
             <div className="relative">
               <button
                 onClick={() => {
+                  if(!userData){
+                    setShowAuth(true)
+                    return
+                  }
                   setShowCreditPopup(!showCreditPopup);
                   setShowUserPopup(false);
                 }}
@@ -91,12 +98,15 @@ function Navbar() {
           <div className="relative">
             <button
               onClick={() => {
-                if (userData) {
-                    setShowUserPopup(!showUserPopup);
-                    setShowCreditPopup(false);
-                } else {
-                    navigate("/auth");
-                }
+                 if(!userData){
+                    setShowAuth(true)
+                    return
+                  }
+                  setShowUserPopup(!showUserPopup);
+                  setShowCreditPopup(false);
+                
+                    // navigate("/auth");
+                
               }}
               className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-semibold shadow-md overflow-hidden cursor-pointer"
             >
@@ -139,6 +149,8 @@ function Navbar() {
           </div>
         </div>
       </motion.div>
+
+      {showAuth && <AuthModel onClose={()=> setShowAuth(false)}/>}
     </div>
   );
 }
