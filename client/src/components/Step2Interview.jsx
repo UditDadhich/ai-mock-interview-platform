@@ -55,16 +55,23 @@ function Step2Interview({ interviewData, onFinish }) {
             <div className="h-px bg-gray-200"></div>
             <div className="grid grid-cols-2 gap-6 text-center">
                 <div>
-                    <span className=""></span>
-                    <span></span>
+                    <span className="text-2xl font-bold text-emerald-600">1</span>
+                    <span className="text-xs text-gray-400">Current Questions</span>
                 </div>
                 <div>
-                    <span></span>
-                    <span></span>
+                    <span className="text-2xl font-bold text-emerald-600">5</span>
+                    <span className="text-xs text-gray-400">Total Questions</span>
                 </div>
             </div>
           </div>
         </div>
+
+        {/* {Text Section} */}
+
+        <div className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 relative">
+          <h2></h2>
+        </div>
+
       </div>
     </div>
   );
