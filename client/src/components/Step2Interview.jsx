@@ -81,7 +81,7 @@ function Step2Interview({ interviewData, onFinish }) {
             <div className="h-px bg-gray-200"></div>
             <div className="grid grid-cols-2 gap-6 text-center">
                 <div>
-                    <span className="text-2xl font-bold text-emerald-600">1</span>
+                    <span className="text-2xl font-bold text-emerald-600">{currentIndex + 1}</span>
                     <span className="text-xs text-gray-400">Current Questions</span>
                 </div>
                 <div>
@@ -102,12 +102,12 @@ function Step2Interview({ interviewData, onFinish }) {
           <div className="relative mb-6 bg-gray-50 p-4 sm:p-6 rounded-2xl
           border border-gray-200 shadow-sm">
               <p className="text-xs sm:text-sm text-gray-400 mb-2">
-                  Question 1 of 5
+                  Question {currentIndex + 1} of {questions.length}
               </p>
 
               <div className="text-base sm:text-lg font-semibold text-gray-800
               leading-relaxed">
-                {currentQuestion?.questions}
+                {currentQuestion?.question}
               </div>
           </div>
            <textarea 
