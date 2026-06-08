@@ -214,31 +214,38 @@ export const submitAnswer = async (req, res) => {
   try {
     const { interviewId, questionIndex, answer, timeTaken } = req.body;
 
+    // Validate required fields
+    if (!interviewId || questionIndex === undefined) {
+      return res.status(400).json({ message: "Missing interviewId or questionIndex" });
+    }
+
     const interview = await Interview.findById(interviewId);
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (!interview.questions[questionIndex]) {
+      return res.status(400).json({ message: "Invalid question index" });
+    }
+
     const question = interview.questions[questionIndex];
 
-    if (!answer) {
+    // Handle empty answer
+    if (!answer || answer.trim() === "") {
       question.score = 0;
       question.feedback = "You did not submit an answer";
       question.answer = "";
-
       await interview.save();
-
-      return res.json({
-        feedback: question.feedback,
-      });
+      return res.json({ feedback: question.feedback });
     }
 
+    // Handle time limit exceeded
     if (timeTaken > question.timeLimit) {
       question.score = 0;
       question.feedback = "Time limit exceeded. Answer not evaluated.";
       question.answer = answer;
-
       await interview.save();
-
-      return res.json({
-        feedback: question.feedback,
-      });
+      return res.json({ feedback: question.feedback });
     }
 
     const messages = [
@@ -256,8 +263,8 @@ export const submitAnswer = async (req, res) => {
             3. Correctness - Is the answer accurate, relevant, and complete?
 
             Rules:
-            -Be realistic and unbiased.
-            -Do not give random high scores.
+            - Be realistic and unbiased.
+            - Do not give random high scores.
             - If the answer is weak, score low.
             - If the answer is strong and detailed, score high.
             - Consider clarity, structure, and relevance.
@@ -290,14 +297,18 @@ export const submitAnswer = async (req, res) => {
         content: `
             Question: ${question.question}
             Answer: ${answer}
-    `,
+            `,
       },
     ];
 
-    const aiResponse = await askAi(message)
+    // ✅ FIXED: use 'messages' instead of 'message'
+    const aiResponse = await askAi(messages);
 
-    const parsed = JSON.parse(aiResponse);
+    // Clean the response (remove markdown if present)
+    const cleanJson = aiResponse.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleanJson);
 
+    // Save evaluation
     question.answer = answer;
     question.confidence = parsed.confidence;
     question.communication = parsed.communication;
@@ -307,9 +318,10 @@ export const submitAnswer = async (req, res) => {
 
     await interview.save();
 
-    return res.status(200).json({feedback: parsed.feedback})
+    return res.status(200).json({ feedback: parsed.feedback });
   } catch (error) {
-    return res.status(500).json({message: `Failed to submit answer ${error}`})
+    console.error("Submit answer error:", error);
+    return res.status(500).json({ message: `Failed to submit answer: ${error.message}` });
   }
 };
 
