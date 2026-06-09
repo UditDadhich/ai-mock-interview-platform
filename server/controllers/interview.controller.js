@@ -326,49 +326,48 @@ export const submitAnswer = async (req, res) => {
 };
 
 
-export const finishInterview = async (req , res) => {
+export const finishInterview = async (req, res) => {
   try {
-    const {interviewId} = req.body
-    const interview = await Interview.findById(interviewId)
+    const { interviewId } = req.body;
+    if (!interviewId) {
+      return res.status(400).json({ message: "Interview ID is required" });
+    }
 
-    if(!interview){
-      return res.status(400).json({message:"Failed to find Interview."})
+    const interview = await Interview.findById(interviewId);
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
     }
 
     const totalQuestions = interview.questions.length;
+    if (totalQuestions === 0) {
+      return res.status(400).json({ message: "Interview has no questions" });
+    }
 
     let totalScore = 0;
     let totalConfidence = 0;
     let totalCommunication = 0;
     let totalCorrectness = 0;
 
-    interview.questions.forEach((q) => {
-      totalScore = q.score || 0;
-      totalConfidence = q.confidence || 0;
-      totalCommunication = q.communication || 0;
-      totalCorrectness = q.correctness || 0;
-    });
+    for (const q of interview.questions) {
+      totalScore += q.score || 0;
+      totalConfidence += q.confidence || 0;
+      totalCommunication += q.communication || 0;
+      totalCorrectness += q.correctness || 0;
+    }
 
-    const finalScore = totalQuestions 
-    ? totalScore / totalQuestions
-    : 0;
+    let finalScore = totalScore / totalQuestions;
+    let avgConfidence = totalConfidence / totalQuestions;
+    let avgCommunication = totalCommunication / totalQuestions;
+    let avgCorrectness = totalCorrectness / totalQuestions;
 
-    const avgConfidence = totalQuestions
-    ? totalConfidence / totalQuestions
-    : 0;
-
-    const avgCommunication = totalQuestions
-    ? totalCommunication / totalQuestions
-    : 0;
-
-    const avgCorrectness = totalQuestions 
-    ? totalCorrectness / totalQuestions
-    : 0;
+    // Guard against NaN (happens if all scores are undefined/null)
+    if (isNaN(finalScore)) finalScore = 0;
+    if (isNaN(avgConfidence)) avgConfidence = 0;
+    if (isNaN(avgCommunication)) avgCommunication = 0;
+    if (isNaN(avgCorrectness)) avgCorrectness = 0;
 
     interview.finalScore = finalScore;
-    interview.status = "completed";
-
-
+    interview.status = "complete";
     await interview.save();
 
     return res.status(200).json({
@@ -376,15 +375,75 @@ export const finishInterview = async (req , res) => {
       confidence: Number(avgConfidence.toFixed(1)),
       communication: Number(avgCommunication.toFixed(1)),
       correctness: Number(avgCorrectness.toFixed(1)),
-      questionWiseScore: interview.questions.map((q) => ({
-        question: q.score || 0,
-        feedback: q.feedback || " ",
-        confidence : q.confidence || 0,
-        communication : q.communication || 0,
-        correctness : q.correctness || 0,
-      }))
-    })
+      questionWiseScore: interview.questions.map((q, idx) => ({
+        questionNumber: idx + 1,
+        question: q.question,
+        score: q.score || 0,
+        feedback: q.feedback || "No feedback available",
+        confidence: q.confidence || 0,
+        communication: q.communication || 0,
+        correctness: q.correctness || 0,
+      })),
+    });
   } catch (error) {
-    return res.status(500).json({message: `Failed to finish interview ${error}`})
+    console.error("Finish interview error:", error);
+    return res.status(500).json({ message: `Failed to finish interview: ${error.message}` });
+  }
+};
+
+export const getMyInterviews = async (req, res) => {
+  try {
+    const interviews = await Interview.find({ userId: req.userId }).sort({ createdAt: -1 }).select("role experience mode finalScore status createdAt");
+    return res.status(200).json(interviews);
+  }catch (error) {
+    console.error("Get interviews error:", error);
+    return res.status(500).json({ message: `Failed to get interviews: ${error.message}` });
+  }
+}
+
+
+export const getInterviewReport = async (req , res) => {
+  try {
+    const interview = await Interview.findById(req.params.id)
+    
+    if(!interview){
+      return res.status(404).json({message: "Interview not found"})
+    }
+
+      const totalQuestions = interview.questions.length;
+    if (totalQuestions === 0) {
+      return res.status(400).json({ message: "Interview has no questions" });
+    }
+
+    let totalConfidence = 0;
+    let totalCommunication = 0;
+    let totalCorrectness = 0;
+
+    for (const q of interview.questions) {
+      totalConfidence += q.confidence || 0;
+      totalCommunication += q.communication || 0;
+      totalCorrectness += q.correctness || 0;
+    }
+
+    let avgConfidence = totalConfidence / totalQuestions;
+    let avgCommunication = totalCommunication / totalQuestions;
+    let avgCorrectness = totalCorrectness / totalQuestions;
+
+    // Guard against NaN (happens if all scores are undefined/null)
+    if (isNaN(avgConfidence)) avgConfidence = 0;
+    if (isNaN(avgCommunication)) avgCommunication = 0;
+    if (isNaN(avgCorrectness)) avgCorrectness = 0;
+
+    return res.json({
+      finalScore: interview.finalScore,
+      confidence: Number(avgConfidence.toFixed(1)),
+      communication: Number(avgCommunication.toFixed(1)),
+      correctness: Number(avgCorrectness.toFixed(1)),
+      questionWiseScore: interview.questions
+    });
+
+  } catch (error) {
+    return res.status(500).json({message: `Failed to find currentUser Interview
+      report , ${error}`})
   }
 }
