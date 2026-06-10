@@ -63,18 +63,43 @@ function InterviewHistory() {
         ) : (
           <div className="grid gap-6">
             {interviews.map((item, index) => (
-              <div key={index}
+              <div
+                key={index}
+                onClick={()=> navigate(`/report/${item._id}`)}
                 className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl
-            transition-all duration-300 cursor-pointer border border-gray-100">
-
+            transition-all duration-300 cursor-pointer border border-gray-100"
+              >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {item.role}
+                    </h3>
+                    <p className="text-gray-500 text-sm mt-1">
+                      {item.experience} • {item.role}
+                    </p>
 
-                    <div></div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
 
-                     <div></div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-emerald-600">
+                      {item.finalScore || 0}/10
+                    </p>
 
+                    <p className="text-xs text-gray-400">Overall Score</p>
+
+                    <span
+                      className={`px-4 py-1 rounded-full text-xs font-medium ${
+                        item.status === "complete"
+                          ? "bg-emerald-900 text-emerald-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}>
+                      {item.status}
+                    </span>
+                  </div>
                 </div>
-              
               </div>
             ))}
           </div>
