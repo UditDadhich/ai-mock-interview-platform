@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import {Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 
 function Step3Report({ report }) {
@@ -54,6 +56,117 @@ function Step3Report({ report }) {
   const score = finalScore;
   const percentage = (score / 10) * 100;
 
+  const downloadPDF = () => {
+    const doc = new jsPDF("p" , "mm" , "a4");
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+
+    let currentY = 25;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(34,197,94);
+    doc.text("AI Interview Performance Report" , pageWidth / 2 , currentY, {
+      align: "center"
+    })
+
+    currentY += 5;
+
+    doc.setDrawColor(34,197,94);
+    doc.line(margin, currentY + 2, pageWidth - margin, currentY+ 2)
+
+    currentY += 15;
+
+    doc.setFillColor(240,253,244);
+    doc.roundedRect(margin, currentY , contentWidth , 20 , 4 , 4 , "F")
+
+    doc.setFontSize(14);
+    doc.setTextColor(0,0,0);
+    doc.text(
+      `Final Score: ${finalScore}/10`,
+      pageWidth / 2,
+      currentY + 12,
+      { align: "center"}
+    )
+
+      currentY += 30;
+
+      doc.setFillColor(249,250,251);
+      doc.roundedRect(margin , currentY , contentWidth, 30 , 4 , 4 , "F");
+
+      doc.setFontSize(12);
+
+      doc.text(`Confidence: ${confidence}` , margin + 10, currentY + 10);
+      doc.text(`Communication: ${communication}` , margin + 10, currentY + 20);
+      doc.text(`Correctness: ${correctness}` , margin + 10, currentY + 30);
+
+      currentY += 45;
+
+      let advice = "";
+
+      if(finalScore >= 8){
+        advice = 
+          "Excellent performance. Maintain confidence and structure. Continue refining clarity and supporting answers with strong real-world examples"
+      }else if(finalScore >= 5){
+        advice = 
+         "Good foundation shown. Improve clarity and structure. Practice delivering concise, confident annswers with stronger supporting examples";
+      }else{
+        advice = 
+         "Significant improvement required. Focus on structured thinking clarity and confidence delivery. Practice answering aloud regularly."
+      }
+
+      doc.setFillColor(255 , 255 , 255);
+      doc.setDrawColor(220);
+      doc.roundedRect(margin , currentY , contentWidth , 35 , 4 , 4);
+
+      doc.setFont("helvetica" , "bold");
+      doc.text("Professional Advice" , margin + 10 , currentY + 10);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+
+      const splitAdvice = doc.splitTextToSize(advice , contentWidth - 20);
+      doc.text(splitAdvice , margin + 10 , currentY + 20);
+
+      currentY += 50;
+
+      autoTable(doc , {
+          startY: currentY,
+          margin: {left: margin, right: margin},
+          head: [["#" , "Question", "Score" , "Feedback"]],
+          body: questionWiseScore.map((q,i) => [
+            `${i+1}`,
+            q.question,
+            `${q.score}/10`,
+            q.feedback,
+          ]),
+          styles: {
+            fontSize: 9,
+            cellPadding: 5,
+            valign: "top",
+          },
+          headStyles: {
+            fillColor: [34, 197 , 94],
+            textColor: 255,
+            halign: "center"
+          },
+          columnStyles: {
+            0: { cellWidth: 10, halign: "center"},
+            1: { cellWidth: 55 },
+            2: { cellWidth: 20 , halign: "center"},
+            3: { cellWidth: "auto"},
+          },
+          alternateRowStyles: {
+            fillColor: [249, 250 , 251]
+          }
+      });
+
+      doc.save("AI_Interview_Report.pdf");
+
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-green-50 px-4 sm:px-6 lg:px-10 py-8">
       <div
@@ -80,7 +193,7 @@ function Step3Report({ report }) {
           </div>
         </div>
 
-        <button
+        <button onClick={downloadPDF}
           className="bg-emerald-600 hover:bg-emerald-700 text-white
         py-3 rounded-xl shadow-md transition-all duration-300 font-semibold text-sm sm:text-base text-nowrap"
         >
@@ -190,6 +303,58 @@ function Step3Report({ report }) {
                 </div>
 
             </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-5
+                sm:p-8">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-6">
+                      Question Breakdown
+                  </h3>
+                  <div className="space-y-6">
+                    {questionWiseScore.map((q,i)=> (
+                      <div key={i} className="bg-gray-50 p-4 sm:p-6 rounded-xl
+                      sm:rounded-2xl border border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:justify-between
+                        sm:items-start gap-3 mb-4">
+
+                          <div>
+                            <p className="text-xs text-gray-400">
+                                Question{i + 1}
+                            </p>
+                            <p className="font-semibold text-gray-800 text-sm sm:text-base leading-relaxed">
+                              {q.question || "Question not available"}
+                            </p>
+                          </div>
+
+
+                          <div className="bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold text-xs sm:text-sm w-fit">
+                            {q.score ?? 0}/10
+                          </div>
+
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 p-4
+                        rounded-lg">
+                          <p className="text-xs text-green-600 font-semibold mb-1">
+                            AI Feedback
+                          </p>
+
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                              {q.feedback && q.feedback.trim() != "" ?
+                              q.feedback 
+                            : "NO feedback available for this question"}
+                          </p>
+
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+
+              </motion.div>
+
         </div>
       </div>
     </div>
