@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { motion } from "motion/react"; // Ensure 'motion' package is correctly installed (or use 'framer-motion')
+import { motion } from "framer-motion";"; // Ensure 'motion' package is correctly installed (or use 'framer-motion')
 import {
   FaUserTie,
   FaBriefcase,
