@@ -11,7 +11,7 @@ import { IoSparklesSharp } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 
 // Local Imports
-import { auth, provider } from "../utils/firebase.js";
+import { auth, provider } from "../Utils/firebase.js";
 import { ServerUrl } from "../App.jsx";
 import { setUserData } from "../redux/userSlice.js";
 
