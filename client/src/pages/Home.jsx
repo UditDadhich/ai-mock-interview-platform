@@ -48,7 +48,7 @@ function Home() {
             className="text-4xl md:text-6xl font-semibold 
                         leading-tight max-w-4xl mx-auto"
           >
-            Pracitce Interview with
+            Practice Interview with
             <span className="realtive inline-block">
               <span
                 className="bg-green-100 text-green-600 px-5 py-1
